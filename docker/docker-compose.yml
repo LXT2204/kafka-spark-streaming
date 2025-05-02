@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - kafka-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"  # Đây là cổng bên ngoài của Kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - kafka-network
+
+  video-producer:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile_producer
+    command: python src/producers/camera_producer.py
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092  # Kafka service name and port within the Docker network
+    volumes:
+      - ../videos:/app/videos
+      - ../logs:/app/logs
+      - ../src:/app/src
+    networks:
+      - kafka-network
+
+  stream-processor:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+    command: python src/app.py
+    depends_on:
+      - kafka
+      - spark
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092  # Kafka service name and port within the Docker network
+      - SPARK_MASTER=spark://spark:7077
+    volumes:
+      - ../models:/app/models
+      - ../logs:/app/logs
+      - ../src:/app/src
+    networks:
+      - kafka-network
+      - spark-network
+
+  spark:
+    image: bitnami/spark:latest
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "7077:7077"  # Spark master port
+      - "8080:8080"  # Spark web UI port
+    volumes:
+      - spark-data:/bitnami/spark
+    networks:
+      - spark-network
+
+networks:
+  kafka-network:
+    driver: bridge
+  spark-network:
+    driver: bridge
+
+volumes:
+  spark-data:
+    driver: local

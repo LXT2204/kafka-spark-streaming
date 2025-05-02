@@ -1,0 +1,23 @@
+kafka:
+  bootstrap_servers: ${KAFKA_BOOTSTRAP_SERVERS}
+  topics:
+    camera_streams: ${KAFKA_TOPIC_CAMERA_STREAMS}
+  group_id: ${KAFKA_GROUP_ID}
+
+video:
+  path: ${VIDEO_PATH}
+  fps: ${VIDEO_FPS}
+  resolution:
+    width: ${VIDEO_RESOLUTION_WIDTH}
+    height: ${VIDEO_RESOLUTION_HEIGHT}
+  loop: ${VIDEO_LOOP}
+
+processing:
+  batch_size: ${BATCH_SIZE}
+  model:
+    device: ${MODEL_DEVICE}
+    weights_path: ${MODEL_WEIGHTS_PATH}
+
+logging:
+  level: ${LOG_LEVEL}
+  file: ${LOG_FILE} 
