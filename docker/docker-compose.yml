@@ -26,7 +26,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - kafka-network
-
   video-producer:
     build:
       context: ..
@@ -42,6 +41,7 @@ services:
       - ../src:/app/src
     networks:
       - kafka-network
+      - spark-network
 
   stream-processor:
     build:
@@ -68,14 +68,26 @@ services:
     image: bitnami/spark:latest
     environment:
       - SPARK_MODE=master
+      - SPARK_PACKAGES=org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.5
     ports:
-      - "7077:7077"  # Spark master port
-      - "8080:8080"  # Spark web UI port
+      - "7077:7077"
+      - "8080:8080"
     volumes:
       - spark-data:/bitnami/spark
     networks:
       - spark-network
-
+      - kafka-network
+  spark-worker:
+    image: bitnami/spark:latest
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_PACKAGES=org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.5
+    depends_on:
+      - spark
+    networks:
+      - spark-network
+      - kafka-network
 networks:
   kafka-network:
     driver: bridge
