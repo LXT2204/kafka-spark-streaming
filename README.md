@@ -3,8 +3,8 @@
 A production-ready Kafka-based system for processing camera streams using PyTorch for deep learning tasks.
 
 ## Features
-
-- Kafka-based streaming infrastructure
+- Kafka interface with spark
+- Kafka-based & Spark streaming infrastructure
 - Camera stream producers
 - Data processing consumers
 - PyTorch integration for deep learning tasks
@@ -36,6 +36,7 @@ A production-ready Kafka-based system for processing camera streams using PyTorc
 ```
 
 ## Setup
+Request env: Java 17 or above
 
 1. Install dependencies:
 ```bash
@@ -48,7 +49,13 @@ pip install -r requirements.txt
 
 3. Run with Docker:
 ```bash
-docker-compose up
+cd docker
+docker-compose up -d
+```
+Exec:
+run
+```bash
+docker exec -it docker-stream-processor-1 bash
 ```
 
 ## Usage
